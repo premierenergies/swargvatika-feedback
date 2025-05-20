@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +16,7 @@ const CremationFeedbackForm = () => {
   const [otherService, setOtherService] = useState('');
   const [comments, setComments] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   // Services checkboxes state
@@ -46,23 +46,23 @@ const CremationFeedbackForm = () => {
     coordination: 0
   });
 
-  const handleServiceChange = (service: keyof typeof services) => {
+  const handleServiceChange = (service) => {
     setServices(prev => ({
       ...prev,
       [service]: !prev[service]
     }));
   };
 
-  const handleRatingChange = (aspect: keyof typeof ratings, value: number) => {
+  const handleRatingChange = (aspect, value) => {
     setRatings(prev => ({
       ...prev,
       [aspect]: value
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (!name || !contactNumber) {
       toast({
         title: "Please complete the form",
@@ -71,9 +71,9 @@ const CremationFeedbackForm = () => {
       });
       return;
     }
-    
-    // Here you would normally send the data to your backend
-    console.log({ 
+  
+    // Construct the feedback object
+    const feedbackData = {
       name, 
       contactNumber, 
       serviceDate, 
@@ -81,20 +81,85 @@ const CremationFeedbackForm = () => {
       services, 
       ratings, 
       otherService, 
-      comments 
+      comments,
+      feedbackType: 'experience'
+    };
+  
+    // Set submitting state
+    setIsSubmitting(true);
+  
+    // Submit feedback to the backend
+    try {
+      console.log('Submitting feedback:', feedbackData);
+      
+      const response = await fetch('http://localhost:7733/api/submit-feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(feedbackData),
+        mode: 'cors', // Explicitly set CORS mode
+      });
+  
+      const responseData = await response.json();
+      
+      if (response.ok) {
+        console.log('Submission successful:', responseData);
+        toast({
+          title: "Feedback Submitted",
+          description: "Thank you for your feedback!",
+        });
+        setSubmitted(true); // To show the thank you message
+        resetForm();
+      } else {
+        console.error('Server returned error:', responseData);
+        throw new Error(responseData.message || 'Error submitting feedback');
+      }
+    } catch (error) {
+      console.error('Submission error:', error);
+      toast({
+        title: "Submission Failed",
+        description: `There was an error submitting your feedback: ${error.message}. Please try again.`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const resetForm = () => {
+    setName('');
+    setContactNumber('');
+    setServiceDate('');
+    setDeceasedName('');
+    setServices({
+      mortuary: false,
+      cremationGround: false,
+      rath: false,
+      cremation: false,
+      priestServices: false,
+      poojaSamagri: false,
+      seatingTent: false,
+      waterBottles: false,
+      ashCollection: false,
+      airConditioning: false,
+      bhajan: false,
+      receipt: false,
+      other: false
     });
-    
-    // Show success message
-    toast({
-      title: "Feedback Submitted",
-      description: "Thank you for your feedback!",
+    setRatings({
+      cleanliness: 0,
+      helpfulness: 0,
+      timeliness: 0,
+      availability: 0,
+      transparency: 0,
+      coordination: 0
     });
-    
-    // Reset form
-    setSubmitted(true);
+    setComments('');
+    setOtherService('');
   };
 
-  const renderRatingOptions = (aspect: keyof typeof ratings) => {
+  const renderRatingOptions = (aspect) => {
     return (
       <div className="flex items-center justify-center gap-4">
         {[1, 2, 3, 4, 5].map((value) => (
@@ -143,6 +208,7 @@ const CremationFeedbackForm = () => {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       className="flex-1 ml-2"
+                      required
                     />
                   </div>
                   
@@ -154,6 +220,7 @@ const CremationFeedbackForm = () => {
                       value={contactNumber}
                       onChange={(e) => setContactNumber(e.target.value)}
                       className="flex-1 ml-2"
+                      required
                     />
                   </div>
                   
@@ -385,8 +452,9 @@ const CremationFeedbackForm = () => {
                 <Button 
                   type="submit" 
                   className="w-full md:w-auto px-8 bg-blue-700 hover:bg-blue-800"
+                  disabled={isSubmitting}
                 >
-                  Submit Feedback
+                  {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
                 </Button>
               </div>
             </form>
