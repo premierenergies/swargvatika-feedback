@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Check, Calendar, Phone, User, mortuary, cremation } from 'lucide-react';
+import { Check, Calendar, Phone, User } from 'lucide-react';
 
 const CremationFeedbackForm = () => {
   const [name, setName] = useState('');
