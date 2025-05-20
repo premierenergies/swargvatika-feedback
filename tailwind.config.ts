@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -52,6 +53,32 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				saffron: {
+					DEFAULT: '#FF9933',
+					50: '#FFEBCC',
+					100: '#FFE1B8',
+					200: '#FFCD8F',
+					300: '#FFB866',
+					400: '#FFA44D',
+					500: '#FF9933',
+					600: '#FA7B00',
+					700: '#D16800',
+					800: '#A85400',
+					900: '#7F4000',
+				},
+				green: {
+					DEFAULT: '#138808',
+					50: '#E0F5DD',
+					100: '#C2EABD',
+					200: '#87D67C',
+					300: '#4BC23C',
+					400: '#23A216',
+					500: '#138808',
+					600: '#107107',
+					700: '#0D5B06',
+					800: '#0A4604',
+					900: '#083003',
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -84,11 +111,16 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-10px)' },
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'float': 'float 6s ease-in-out infinite'
 			}
 		}
 	},
