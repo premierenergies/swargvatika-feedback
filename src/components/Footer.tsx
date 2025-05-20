@@ -14,7 +14,7 @@ const Footer: React.FC = () => {
               © {new Date().getFullYear()} Swarg Vatika Trust. All rights reserved.
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Making a difference with your support
+              Providing respectful and dignified cremation services
             </p>
           </div>
         </div>

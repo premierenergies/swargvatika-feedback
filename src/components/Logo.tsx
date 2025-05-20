@@ -14,8 +14,8 @@ const Logo: React.FC<LogoProps> = ({ className }) => {
         </div>
         <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full"></div>
       </div>
-      <div className="text-xl font-bold bg-gradient-to-r from-saffron-500 via-saffron-600 to-green-500 bg-clip-text text-transparent">
-        Swarg Vatika Trust
+      <div className="text-xl font-bold text-slate-700">
+        Swarg Vatika Trust - Cremation Services
       </div>
     </div>
   );
