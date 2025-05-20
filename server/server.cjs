@@ -3,6 +3,10 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 
+require("isomorphic-fetch");
+const { Client } = require("@microsoft/microsoft-graph-client");
+const { ClientSecretCredential } = require("@azure/identity");
+
 const app = express();
 
 // Use CORS middleware with default options to allow all origins
@@ -28,6 +32,28 @@ mongoose.connect(
 )
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
+
+  const CLIENT_ID = "5a58e660-dc7b-49ec-a48c-1fffac02f721";
+const CLIENT_SECRET = "6_I8Q~U7IbS~NERqNeszoCRs2kETiO1Yc3cXAaup";
+const TENANT_ID = "1c3de7f3-f8d1-41d3-8583-2517cf3ba3b1";
+const SENDER_EMAIL = "leaf@premierenergies.com";
+
+const credential = new ClientSecretCredential(
+  TENANT_ID,
+  CLIENT_ID,
+  CLIENT_SECRET
+);
+
+const graphClient = Client.initWithMiddleware({
+  authProvider: {
+    getAccessToken: async () => {
+      const tokenResponse = await credential.getToken(
+        "https://graph.microsoft.com/.default"
+      );
+      return tokenResponse.token;
+    },
+  },
+});
 
 // --- Define Feedback Schema ---
 const feedbackSchema = new mongoose.Schema({
@@ -112,6 +138,102 @@ app.post('/api/submit-feedback', async (req, res) => {
     return res.status(500).json({ message: 'Error saving feedback', error: error.message });
   }
 });
+
+app.post('/api/send-tabulated-email', async (req, res) => {
+  try {
+    const {
+      name,
+      contactNumber,
+      serviceDate,
+      deceasedName,
+      services,
+      ratings,
+      otherService,
+      comments,
+    } = req.body;
+
+    // Helper to safely display boolean as Yes/No
+    const yesNo = (val) => (val ? 'Yes' : 'No');
+
+    // Build Services table rows dynamically
+    const servicesHtml = Object.entries(services || {})
+      .map(
+        ([key, value]) =>
+          `<tr><td>${key.charAt(0).toUpperCase() + key.slice(1)}</td><td>${yesNo(value)}</td></tr>`
+      )
+      .join('');
+
+    // Build Ratings table rows dynamically
+    const ratingsHtml = Object.entries(ratings || {})
+      .map(
+        ([key, value]) =>
+          `<tr><td>${key.charAt(0).toUpperCase() + key.slice(1)}</td><td>${value || 'N/A'}</td></tr>`
+      )
+      .join('');
+
+    // Construct the full HTML content
+    const htmlContent = `
+      <h2>Automated Feedback Summary</h2>
+      <h3>Basic Information</h3>
+      <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse;">
+        <tr><td><strong>Name</strong></td><td>${name || 'N/A'}</td></tr>
+        <tr><td><strong>Contact Number</strong></td><td>${contactNumber || 'N/A'}</td></tr>
+        <tr><td><strong>Date of Service</strong></td><td>${serviceDate || 'N/A'}</td></tr>
+        <tr><td><strong>Name of Deceased</strong></td><td>${deceasedName || 'N/A'}</td></tr>
+      </table>
+
+      <h3>Services Availed</h3>
+      <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse;">
+        <thead><tr style="background-color:#f2f2f2;"><th>Service</th><th>Provided</th></tr></thead>
+        <tbody>
+          ${servicesHtml}
+          ${
+            services?.other
+              ? `<tr><td>Other Service Details</td><td>${otherService || 'N/A'}</td></tr>`
+              : ''
+          }
+        </tbody>
+      </table>
+
+      <h3>Ratings</h3>
+      <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse;">
+        <thead><tr style="background-color:#f2f2f2;"><th>Aspect</th><th>Rating</th></tr></thead>
+        <tbody>
+          ${ratingsHtml}
+        </tbody>
+      </table>
+
+      <h3>Additional Comments</h3>
+      <p>${comments || 'None'}</p>
+
+      <p>Regards,<br/>Swarg Vatika Team</p>
+    `;
+
+    const message = {
+      message: {
+        subject: "Swarg Vatika New Feedback Submission",
+        body: {
+          contentType: "HTML",
+          content: htmlContent,
+        },
+        toRecipients: [
+          { emailAddress: { address: "aarnav.singh@premierenergies.com" } },
+          { emailAddress: { address: "info@swargvatika.org" } },
+          { emailAddress: {address: "sps@premierenergies.com" } },
+        ],
+      },
+      saveToSentItems: true,
+    };
+
+    await graphClient.api(`/users/${SENDER_EMAIL}/sendMail`).post(message);
+
+    res.status(200).json({ message: "Tabulated email sent successfully." });
+  } catch (error) {
+    console.error("Error sending tabulated email:", error);
+    res.status(500).json({ message: "Failed to send email", error: error.message });
+  }
+});
+
 
 // --- Error handling middleware ---
 app.use((err, req, res, next) => {
