@@ -90,7 +90,7 @@ const CremationFeedbackForm = () => {
       // 1) Submit feedback data
       console.log("Submitting feedback:", feedbackData);
       const feedbackResponse = await fetch(
-        "http://localhost:7733/api/submit-feedback",
+        "https://swargvatika-feedback.onrender.com/api/submit-feedback",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -109,7 +109,7 @@ const CremationFeedbackForm = () => {
       // 2) On success, send tabulated email with full feedback data
       console.log("Sending tabulated email...");
       const emailResponse = await fetch(
-        "http://localhost:7733/api/send-tabulated-email",
+        "https://swargvatika-feedback.onrender.com/api/send-tabulated-email",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
